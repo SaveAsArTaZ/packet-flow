@@ -1,0 +1,70 @@
+# Build Outputs
+**/bin/
+**/obj/
+**/build/
+
+# .NET Build Artifacts
+*.dll
+*.pdb
+*.exe
+*.deps.json
+*.runtimeconfig.json
+
+# Native Build Artifacts
+*.so
+*.so.*
+*.a
+*.o
+*.dylib
+*.dll
+*.lib
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Simulation Output
+*.pcap
+*.xml
+*.txt
+!CMakeLists.txt
+!LICENSE.txt
+!ThirdPartyNotices.txt
+
+# IDE / Editor
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Package Management
+**/packages/
+**/node_modules/
+*.nuget.props
+*.nuget.targets
+project.assets.json
+project.nuget.cache
+*.dgspec.json
+
+# Logs
+*.log
+
+# Temporary Files
+*.tmp
+*.temp
+dotnet-install.sh
+

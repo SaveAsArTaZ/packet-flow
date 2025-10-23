@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- Package Information -->
+    <PackageId>PacketFlow.Ns3Adapter</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>PacketFlow Team</Authors>
+    <Company>PacketFlow</Company>
+    <Description>Production-quality .NET 8 adapter for ns-3 network simulator with full P/Invoke support</Description>
+    <PackageTags>ns3;network-simulation;networking;simulation;interop</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/packetflow/packet-flow</RepositoryUrl>
+    
+    <!-- Documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    
+    <!-- Native Libraries -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Include native libraries in NuGet package -->
+    <Content Include="..\..\native\build\**\ns3shim.*" Pack="true" PackagePath="runtimes/win-x64/native" Condition="Exists('..\..\native\build')"/>
+  </ItemGroup>
+
+</Project>
+
