@@ -6,6 +6,7 @@
 // - Event callback marshalling
 // - Thread-safe error handling
 
+using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using PacketFlow.Ns3Adapter.Interop;
 
@@ -350,7 +351,8 @@ public sealed class Device
             };
         }
 
-        var userPtr = txHandle?.ToIntPtr() ?? rxHandle?.ToIntPtr() ?? nint.Zero;
+        var userPtr = txHandle.HasValue ? GCHandle.ToIntPtr(txHandle.Value) : 
+                      rxHandle.HasValue ? GCHandle.ToIntPtr(rxHandle.Value) : nint.Zero;
         var status = NativeMethods.trace_subscribe_packet_events(_simulation.Handle, NativeHandle, nativeTx, nativeRx, userPtr);
         
         if (status != NativeMethods.Ns3Status.Ok)
