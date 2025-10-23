@@ -1,0 +1,42 @@
+# Build outputs
+native/build/
+dotnet/**/bin/
+dotnet/**/obj/
+nuget-output/
+
+# Native libraries
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# IDEs
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test results
+TestResults/
+*.trx
+
+# PCAP files
+*.pcap
+
+# Temporary
+*.tmp
+*.temp
+*~
+
+# NuGet
+*.nupkg
+runtimes/
+
