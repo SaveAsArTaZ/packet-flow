@@ -36,9 +36,7 @@ using namespace ns3;
 // Internal Structures
 // ============================================================================
 
-namespace {
-
-/// Per-simulation context
+/// Per-simulation context (must be in global namespace to match header forward declaration)
 struct ns3_sim_t {
     // Handle maps
     std::map<uint64_t, Ptr<Node>> nodes;
@@ -72,6 +70,8 @@ struct ns3_sim_t {
         return lastError;
     }
 };
+
+namespace {
 
 // Opaque handle type definitions
 struct ns3_node_t { uint64_t id; };
@@ -144,6 +144,17 @@ struct PacketTraceContext {
     void* user;
     uint64_t deviceId;
 };
+
+// Helper callback functions for packet tracing
+void PacketTxCallback(PacketTraceContext* ctx, Ptr<const Packet> packet) {
+    double now = Simulator::Now().GetSeconds();
+    ctx->onTx(ctx->user, ctx->deviceId, now, packet->GetSize());
+}
+
+void PacketRxCallback(PacketTraceContext* ctx, Ptr<const Packet> packet) {
+    double now = Simulator::Now().GetSeconds();
+    ctx->onRx(ctx->user, ctx->deviceId, now, packet->GetSize());
+}
 
 } // anonymous namespace
 
@@ -615,20 +626,14 @@ NS3SHIM_API ns3_status trace_subscribe_packet_events(ns3_sim sim, ns3_device dev
         if (onTx) {
             device->GetObject<PointToPointNetDevice>()->TraceConnectWithoutContext(
                 "PhyTxEnd",
-                [ctx](Ptr<const Packet> packet) {
-                    double now = Simulator::Now().GetSeconds();
-                    ctx->onTx(ctx->user, ctx->deviceId, now, packet->GetSize());
-                }
+                MakeBoundCallback(&PacketTxCallback, ctx)
             );
         }
         
         if (onRx) {
             device->GetObject<PointToPointNetDevice>()->TraceConnectWithoutContext(
                 "PhyRxEnd",
-                [ctx](Ptr<const Packet> packet) {
-                    double now = Simulator::Now().GetSeconds();
-                    ctx->onRx(ctx->user, ctx->deviceId, now, packet->GetSize());
-                }
+                MakeBoundCallback(&PacketRxCallback, ctx)
             );
         }
         

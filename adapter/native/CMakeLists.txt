@@ -91,13 +91,19 @@ set(NS3_MODULES
 # Find all required ns-3 libraries
 set(NS3_LIBRARIES "")
 foreach(MODULE ${NS3_MODULES})
-    # Try different naming conventions
+    # Try different naming conventions (including build profiles like -default, -optimized)
     find_library(NS3_${MODULE}_LIB
         NAMES 
             ns3-${MODULE}
             ns3.41-${MODULE}
+            ns3.41-${MODULE}-default
+            ns3.41-${MODULE}-optimized
             ns3.42-${MODULE}
+            ns3.42-${MODULE}-default
+            ns3.42-${MODULE}-optimized
             ns3.43-${MODULE}
+            ns3.43-${MODULE}-default
+            ns3.43-${MODULE}-optimized
             libns3-${MODULE}
         PATHS ${NS3_LIB_DIR}
         NO_DEFAULT_PATH
