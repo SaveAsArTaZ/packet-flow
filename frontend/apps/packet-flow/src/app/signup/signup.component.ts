@@ -46,7 +46,7 @@ export class SignupComponent {
     this.auth
       .register(username, email, password, confirmPassword, firstName || undefined, lastName || undefined)
       .subscribe({
-        next: () => this.router.navigate(['/']),
+        next: () => this.router.navigate(['/dashboard']),
         error: (err: Error) => {
           this.serverError = err.message || 'Registration failed';
         },

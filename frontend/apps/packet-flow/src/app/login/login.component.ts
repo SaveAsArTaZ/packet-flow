@@ -34,7 +34,7 @@ export class LoginComponent {
     const { usernameOrEmail, password, rememberMe } = this.form.getRawValue();
 
     this.auth.login(usernameOrEmail, password, rememberMe).subscribe({
-      next: () => this.router.navigate(['/']),
+      next: () => this.router.navigate(['/dashboard']),
       error: (err: Error) => {
         this.serverError = err.message || 'Login failed';
       },

@@ -1,0 +1,144 @@
+<section class="min-h-screen pt-24 pb-16 px-6 sm:px-10 lg:px-16 bg-background">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">
+          Welcome{{ auth.currentUser()?.firstName ? ', ' + auth.currentUser()?.firstName : '' }}
+        </h1>
+        <p class="text-sm text-muted-foreground mt-1">Manage your network simulation templates</p>
+      </div>
+      <button
+        class="inline-flex items-center justify-center h-10 px-5 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+      >
+        + New Template
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex items-center gap-1 mb-6 border-b border-border">
+      <button
+        class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px"
+        [class.border-foreground]="activeTab === 'my'"
+        [class.text-foreground]="activeTab === 'my'"
+        [class.border-transparent]="activeTab !== 'my'"
+        [class.text-muted-foreground]="activeTab !== 'my'"
+        (click)="switchTab('my')"
+      >
+        My Templates
+      </button>
+      <button
+        class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px"
+        [class.border-foreground]="activeTab === 'public'"
+        [class.text-foreground]="activeTab === 'public'"
+        [class.border-transparent]="activeTab !== 'public'"
+        [class.text-muted-foreground]="activeTab !== 'public'"
+        (click)="switchTab('public')"
+      >
+        Public Templates
+      </button>
+      <button
+        class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px"
+        [class.border-foreground]="activeTab === 'search'"
+        [class.text-foreground]="activeTab === 'search'"
+        [class.border-transparent]="activeTab !== 'search'"
+        [class.text-muted-foreground]="activeTab !== 'search'"
+        (click)="switchTab('search')"
+      >
+        Search
+      </button>
+    </div>
+
+    <!-- Search bar -->
+    @if (activeTab === 'search') {
+      <div class="flex gap-3 mb-6">
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="onSearch()"
+          placeholder="Search templates..."
+          class="flex-1 h-10 rounded-md border border-border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+        <button
+          (click)="onSearch()"
+          class="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+        >
+          Search
+        </button>
+      </div>
+    }
+
+    <!-- Loading -->
+    @if (templateSvc.isLoading()) {
+      <div class="flex items-center justify-center py-20">
+        <div class="w-6 h-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin"></div>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (templateSvc.error()) {
+      <div class="rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400 mb-6">
+        {{ templateSvc.error() }}
+      </div>
+    }
+
+    <!-- Template grid -->
+    @if (!templateSvc.isLoading()) {
+      @if (activeTab === 'search' && !hasSearched) {
+        <div class="text-center py-20 text-muted-foreground text-sm">
+          Enter a search term to find templates
+        </div>
+      } @else if (templateList.length === 0) {
+        <div class="text-center py-20 text-muted-foreground text-sm">
+          No templates found
+        </div>
+      } @else {
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (tpl of templateList; track tpl.id) {
+            <div class="rounded-xl border border-border bg-card p-5 hover:border-foreground/20 transition-colors">
+              <!-- Tags -->
+              @if (tpl.tags.length > 0) {
+                <div class="flex flex-wrap gap-1.5 mb-3">
+                  @for (tag of tpl.tags; track tag) {
+                    <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-foreground/5 text-muted-foreground uppercase tracking-wide">
+                      {{ tag }}
+                    </span>
+                  }
+                </div>
+              }
+
+              <h3 class="font-semibold text-foreground mb-1 truncate">{{ tpl.name }}</h3>
+              @if (tpl.description) {
+                <p class="text-sm text-muted-foreground line-clamp-2 mb-3">{{ tpl.description }}</p>
+              }
+
+              <!-- Meta -->
+              <div class="flex items-center justify-between text-xs text-muted-foreground mt-auto">
+                <span>{{ tpl.isPublic ? 'Public' : 'Private' }}</span>
+                <span>{{ tpl.usageCount }} uses</span>
+              </div>
+
+              <!-- Actions (owner only) -->
+              @if (activeTab === 'my' && tpl.ownerId === auth.currentUser()?.id) {
+                <div class="flex gap-2 mt-3 pt-3 border-t border-border">
+                  <button
+                    (click)="cloneTemplate(tpl.id)"
+                    class="flex-1 h-8 text-xs font-medium rounded-md border border-border hover:bg-muted transition-colors"
+                  >
+                    Clone
+                  </button>
+                  <button
+                    (click)="deleteTemplate(tpl.id)"
+                    class="flex-1 h-8 text-xs font-medium rounded-md border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+</section>
