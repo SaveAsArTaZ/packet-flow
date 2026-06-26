@@ -36,7 +36,23 @@ export class TypewriterComponent implements AfterViewInit, OnDestroy {
   private zone = inject(NgZone);
   private service = inject(TypewriterService);
 
-  @Input() text = '';
+  // Use a setter so we can react when the parent re-binds text
+  // (e.g. after a language switch via the translate pipe).
+  private _text = '';
+
+  @Input()
+  set text(value: string) {
+    this._text = value;
+    // If the typewriter already finished animating, just swap the
+    // displayed text immediately so language changes take effect.
+    if (this.done()) {
+      this.visibleText.set(value);
+    }
+  }
+  get text(): string {
+    return this._text;
+  }
+
   @Input() speed = 30; // ms per character
   @Input() delay = 0; // ms delay before starting (relative to becoming active)
   @Input() cursor = true; // show blinking cursor while typing
@@ -131,10 +147,13 @@ export class TypewriterComponent implements AfterViewInit, OnDestroy {
   }
 
   private executeTyping(): Promise<void> {
+    // Snapshot the text now so the tween uses a stable value even if the
+    // @Input() changes mid-animation (e.g. language switch).
+    const snapshot = this.text;
     return new Promise<void>((resolve) => {
       this.resolveExecute = resolve;
 
-      const total = this.text.length;
+      const total = snapshot.length;
       const obj = { progress: 0 };
 
       this.tween = gsap.to(obj, {
@@ -143,13 +162,10 @@ export class TypewriterComponent implements AfterViewInit, OnDestroy {
         ease: 'none',
         onUpdate: () => {
           const idx = Math.floor(obj.progress);
-          // Grow visibleText one character at a time.
-          // The cursor in the template sits right after {{ visibleText() }},
-          // so it naturally flows forward with each new character.
-          this.visibleText.set(this.text.slice(0, idx));
+          this.visibleText.set(snapshot.slice(0, idx));
         },
         onComplete: () => {
-          this.visibleText.set(this.text);
+          this.visibleText.set(snapshot);
           // Don't stop the cursor blink here — the cursor keeps blinking
           // on the last typed word. When the next job starts, the
           // activeId$ subscription will call stopCursorBlink() for us.
