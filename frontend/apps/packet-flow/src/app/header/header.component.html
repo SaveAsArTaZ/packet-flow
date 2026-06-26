@@ -1,0 +1,50 @@
+<header class="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+  <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-6 sm:px-10 lg:px-16">
+    <!-- Logo -->
+    <a routerLink="/" class="flex items-center gap-2 font-bold text-lg tracking-tight text-foreground hover:opacity-80 transition-opacity">
+      <span class="w-7 h-7 rounded-md bg-foreground flex items-center justify-center">
+        <span class="text-background text-xs font-extrabold">P</span>
+      </span>
+      Packet Flow
+    </a>
+
+    <!-- Right actions -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Theme toggle -->
+      <button
+        class="inline-flex items-center justify-center w-9 h-9 rounded-md border border-border hover:bg-muted transition-colors"
+        (click)="toggleTheme()"
+        [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      >
+        <!-- Sun icon (light mode) -->
+        @if (theme.isDark()) {
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        } @else {
+          <!-- Moon icon (dark mode) -->
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        }
+      </button>
+
+      <!-- Auth buttons -->
+      <a
+        routerLink="/login"
+        class="inline-flex items-center justify-center h-9 px-3 text-sm font-medium rounded-md hover:bg-muted transition-colors"
+      >
+        Log in
+      </a>
+      <a
+        routerLink="/signup"
+        class="inline-flex items-center justify-center h-9 px-4 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+      >
+        Sign up
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Spacer for fixed header -->
+<div class="h-16"></div>

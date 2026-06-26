@@ -1,0 +1,24 @@
+<div class="terminal-window rounded-lg border border-border overflow-hidden">
+  <!-- Title bar -->
+  <div class="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-[#0d1117]">
+    <span class="w-3 h-3 rounded-full bg-[#ff5f57]"></span>
+    <span class="w-3 h-3 rounded-full bg-[#febc2e]"></span>
+    <span class="w-3 h-3 rounded-full bg-[#28c840]"></span>
+    <span class="ml-2 text-xs text-white/40 font-mono select-none">packet-flow ~ simulator</span>
+  </div>
+
+  <!-- Terminal body -->
+  <div class="p-4 sm:p-6 font-mono text-sm sm:text-base leading-relaxed bg-[#0d1117] min-h-[200px]">
+    @for (line of displayedLines; track $index; let i = $index) {
+      <div class="terminal-line">
+        <span class="text-[#28c840]">{{ line.text }}</span>
+        @if (i === currentLine && !line.done) {
+          <span class="cursor inline-block w-[0.6em] h-[1.2em] bg-[#28c840] align-text-bottom ml-0.5"></span>
+        }
+      </div>
+    }
+    @if (displayedLines.length === 0) {
+      <span class="cursor inline-block w-[0.6em] h-[1.2em] bg-[#28c840] align-text-bottom"></span>
+    }
+  </div>
+</div>

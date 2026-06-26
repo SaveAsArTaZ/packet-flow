@@ -1,0 +1,52 @@
+<section class="min-h-screen flex items-center justify-center px-6 bg-background">
+  <div class="w-full max-w-md space-y-8">
+    <div class="text-center">
+      <div class="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mx-auto mb-4">
+        <span class="text-background text-lg font-extrabold">P</span>
+      </div>
+      <h2 class="text-2xl font-bold tracking-tight">Create an account</h2>
+      <p class="text-sm text-muted-foreground mt-2">Start building your network simulations</p>
+    </div>
+
+    <form class="space-y-4" (submit)="$event.preventDefault()">
+      <div class="space-y-2">
+        <label class="text-sm font-medium" for="name">Full name</label>
+        <input
+          id="name"
+          type="text"
+          placeholder="Jane Smith"
+          class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        />
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium" for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="name@example.com"
+          class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        />
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium" for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="••••••••"
+          class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        />
+      </div>
+      <button
+        type="submit"
+        class="w-full h-10 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+      >
+        Create account
+      </button>
+    </form>
+
+    <p class="text-center text-sm text-muted-foreground">
+      Already have an account?
+      <a routerLink="/login" class="font-medium text-foreground underline underline-offset-4 hover:opacity-80">Log in</a>
+    </p>
+  </div>
+</section>

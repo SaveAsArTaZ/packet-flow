@@ -1,0 +1,51 @@
+<section class="relative min-h-screen flex flex-col justify-center px-6 sm:px-12 lg:px-24 overflow-hidden bg-background">
+  <!-- Animated network topology background -->
+  <pf-network-bg />
+
+  <!-- Main content -->
+  <div class="max-w-4xl relative z-10">
+    <!-- Eyebrow -->
+    <p class="text-sm sm:text-base font-medium tracking-[0.2em] uppercase text-muted-foreground mb-6">
+      <pf-typewriter text="VISUAL NETWORK SIMULATION" [speed]="30" [cursor]="true" [scrollTrigger]="false" />
+    </p>
+
+    <!-- Title — two words, stacked -->
+    <h1 class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-tight leading-[0.95] text-foreground mb-6">
+      <span class="block">
+        <pf-typewriter text="Packet" [speed]="30" [cursor]="true" [scrollTrigger]="false" />
+      </span>
+      <span class="block">
+        <pf-typewriter text="Flow" [speed]="30" [cursor]="true" [scrollTrigger]="false" />
+      </span>
+    </h1>
+
+    <!-- Subtitle lines -->
+    <p class="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mb-4 leading-relaxed">
+      <pf-typewriter
+        text="Explore data as it traverses complex routing topologies."
+        [speed]="30"
+        [cursor]="true"
+        [scrollTrigger]="false"
+      />
+    </p>
+    <p class="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mb-10 leading-relaxed">
+      <pf-typewriter
+        text="Built for engineers who think in packets."
+        [speed]="30"
+        [cursor]="true"
+        [scrollTrigger]="false"
+        (finished)="onHeroTypingComplete()"
+      />
+    </p>
+
+    <!-- Decorative line -->
+    <div #decorLine class="w-24 h-px bg-foreground/20 mb-8 origin-left"></div>
+
+    <!-- Buttons -->
+    <div #actions class="flex flex-wrap gap-3 opacity-0">
+      <ui-button size="lg">Explore the demo</ui-button>
+      <ui-button variant="outline" size="lg">Learn more</ui-button>
+    </div>
+  </div>
+
+</section>
