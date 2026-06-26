@@ -13,13 +13,6 @@ public static class PointToPoint
     /// <summary>
     /// Creates a point-to-point link between two nodes
     /// </summary>
-    /// <param name="simulation">Simulation context</param>
-    /// <param name="nodeA">First node</param>
-    /// <param name="nodeB">Second node</param>
-    /// <param name="dataRate">Data rate (e.g., "5Mbps", "1Gbps")</param>
-    /// <param name="delay">Propagation delay (e.g., "2ms", "10us")</param>
-    /// <param name="mtu">Maximum transmission unit in bytes (default: 1500)</param>
-    /// <returns>Tuple of devices on both nodes</returns>
     public static (Device DeviceA, Device DeviceB) Install(
         Simulation simulation,
         Node nodeA,
@@ -39,7 +32,8 @@ public static class PointToPoint
         if (string.IsNullOrEmpty(delay))
             throw new ArgumentException("Delay cannot be empty", nameof(delay));
 
-        var status = NativeMethods.p2p_install(
+        var interop = simulation.Interop;
+        var status = interop.P2PInstall(
             simulation.Handle,
             nodeA.NativeHandle,
             nodeB.NativeHandle,
@@ -66,11 +60,6 @@ public static class Csma
     /// <summary>
     /// Creates a CSMA bus connecting multiple nodes
     /// </summary>
-    /// <param name="simulation">Simulation context</param>
-    /// <param name="nodes">Nodes to connect on the bus</param>
-    /// <param name="dataRate">Data rate (e.g., "100Mbps")</param>
-    /// <param name="delay">Propagation delay (e.g., "6560ns")</param>
-    /// <returns>Array of devices (one per node)</returns>
     public static unsafe Device[] Install(
         Simulation simulation,
         Node[] nodes,
@@ -93,11 +82,12 @@ public static class Csma
         }
 
         var deviceHandles = new nint[nodes.Length];
+        var interop = simulation.Interop;
 
         fixed (nint* nodePtr = nodeHandles)
         fixed (nint* devPtr = deviceHandles)
         {
-            var status = NativeMethods.csma_install(
+            var status = interop.CsmaInstall(
                 simulation.Handle,
                 nodePtr,
                 (uint)nodes.Length,
@@ -145,13 +135,6 @@ public static class WiFi
     /// <summary>
     /// Creates a Wi-Fi network with stations and an access point
     /// </summary>
-    /// <param name="simulation">Simulation context</param>
-    /// <param name="stations">Station nodes</param>
-    /// <param name="accessPoint">Access point node</param>
-    /// <param name="standard">Wi-Fi PHY standard</param>
-    /// <param name="dataRate">Data rate (e.g., "54Mbps")</param>
-    /// <param name="channel">Wi-Fi channel number</param>
-    /// <returns>Tuple of station devices and AP device</returns>
     public static unsafe (Device[] StationDevices, Device AccessPointDevice) InstallStationAp(
         Simulation simulation,
         Node[] stations,
@@ -176,11 +159,12 @@ public static class WiFi
         }
 
         var staDevHandles = new nint[stations.Length];
+        var interop = simulation.Interop;
 
         fixed (nint* staPtr = staHandles)
         fixed (nint* devPtr = staDevHandles)
         {
-            var status = NativeMethods.wifi_install_sta_ap(
+            var status = interop.WiFiInstallStaAp(
                 simulation.Handle,
                 staPtr,
                 (uint)stations.Length,
@@ -203,4 +187,3 @@ public static class WiFi
         }
     }
 }
-

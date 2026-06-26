@@ -17,6 +17,8 @@ namespace PacketFlow.Ns3Adapter.Interop;
 /// </summary>
 internal sealed class SimHandle : SafeHandleZeroOrMinusOneIsInvalid
 {
+    private readonly bool _ownsNative;
+
     /// <summary>
     /// Creates an invalid handle
     /// </summary>
@@ -25,11 +27,13 @@ internal sealed class SimHandle : SafeHandleZeroOrMinusOneIsInvalid
     }
 
     /// <summary>
-    /// Creates a handle with the specified value
+    /// Creates a handle with the specified value.
     /// </summary>
     /// <param name="handle">Native handle value</param>
-    public SimHandle(nint handle) : base(ownsHandle: true)
+    /// <param name="ownsNative">If false, native cleanup is skipped (used for unit testing with mocks)</param>
+    public SimHandle(nint handle, bool ownsNative = true) : base(ownsHandle: true)
     {
+        _ownsNative = ownsNative;
         SetHandle(handle);
     }
 
@@ -38,7 +42,7 @@ internal sealed class SimHandle : SafeHandleZeroOrMinusOneIsInvalid
     /// </summary>
     protected override bool ReleaseHandle()
     {
-        if (IsInvalid)
+        if (IsInvalid || !_ownsNative)
             return true;
 
         try

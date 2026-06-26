@@ -33,18 +33,26 @@ public class Ns3Exception : Exception
         const int bufferSize = 1024;
         Span<byte> buffer = stackalloc byte[bufferSize];
 
-        fixed (byte* ptr = buffer)
+        try
         {
-            var status = NativeMethods.ns3_last_error(simHandle, ptr, (nuint)bufferSize);
-            if (status == NativeMethods.Ns3Status.Ok)
+            fixed (byte* ptr = buffer)
             {
-                // Find null terminator
-                int length = 0;
-                while (length < bufferSize && buffer[length] != 0)
-                    length++;
+                var status = NativeMethods.ns3_last_error(simHandle, ptr, (nuint)bufferSize);
+                if (status == NativeMethods.Ns3Status.Ok)
+                {
+                    // Find null terminator
+                    int length = 0;
+                    while (length < bufferSize && buffer[length] != 0)
+                        length++;
 
-                return Encoding.UTF8.GetString(buffer[..length]);
+                    return Encoding.UTF8.GetString(buffer[..length]);
+                }
             }
+        }
+        catch (DllNotFoundException)
+        {
+            // Native library not available (e.g., unit test context).
+            return "Native error (ns3shim not loaded)";
         }
 
         return "Unknown error (failed to retrieve error message)";

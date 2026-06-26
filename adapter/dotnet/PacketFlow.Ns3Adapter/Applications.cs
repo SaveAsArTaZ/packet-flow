@@ -32,20 +32,18 @@ public sealed class Application
     /// <summary>
     /// Schedules the application to start at the specified time
     /// </summary>
-    /// <param name="startTime">Time to start the application</param>
     public void Start(TimeSpan startTime)
     {
-        var status = NativeMethods.app_start(_simulation.Handle, NativeHandle, startTime.TotalSeconds);
+        var status = _simulation.Interop.AppStart(_simulation.Handle, NativeHandle, startTime.TotalSeconds);
         Ns3Exception.ThrowIfError(status, _simulation.Handle, nameof(Start));
     }
 
     /// <summary>
     /// Schedules the application to stop at the specified time
     /// </summary>
-    /// <param name="stopTime">Time to stop the application</param>
     public void Stop(TimeSpan stopTime)
     {
-        var status = NativeMethods.app_stop(_simulation.Handle, NativeHandle, stopTime.TotalSeconds);
+        var status = _simulation.Interop.AppStop(_simulation.Handle, NativeHandle, stopTime.TotalSeconds);
         Ns3Exception.ThrowIfError(status, _simulation.Handle, nameof(Stop));
     }
 }
@@ -58,10 +56,6 @@ public static class UdpEcho
     /// <summary>
     /// Creates a UDP Echo server application
     /// </summary>
-    /// <param name="simulation">Simulation context</param>
-    /// <param name="node">Node to host the server</param>
-    /// <param name="port">UDP port number</param>
-    /// <returns>UDP Echo server application</returns>
     public static Application CreateServer(Simulation simulation, Node node, ushort port)
     {
         if (simulation == null)
@@ -69,7 +63,8 @@ public static class UdpEcho
         if (node == null)
             throw new ArgumentNullException(nameof(node));
 
-        var status = NativeMethods.app_udpecho_server(
+        var interop = simulation.Interop;
+        var status = interop.AppUdpEchoServer(
             simulation.Handle,
             node.NativeHandle,
             port,
@@ -83,14 +78,6 @@ public static class UdpEcho
     /// <summary>
     /// Creates a UDP Echo client application
     /// </summary>
-    /// <param name="simulation">Simulation context</param>
-    /// <param name="node">Node to host the client</param>
-    /// <param name="destinationIp">Destination IP address</param>
-    /// <param name="port">Destination UDP port</param>
-    /// <param name="packetSize">Size of each packet in bytes</param>
-    /// <param name="interval">Interval between packets</param>
-    /// <param name="maxPackets">Maximum number of packets to send</param>
-    /// <returns>UDP Echo client application</returns>
     public static Application CreateClient(
         Simulation simulation,
         Node node,
@@ -107,7 +94,8 @@ public static class UdpEcho
         if (string.IsNullOrEmpty(destinationIp))
             throw new ArgumentException("Destination IP cannot be empty", nameof(destinationIp));
 
-        var status = NativeMethods.app_udpecho_client(
+        var interop = simulation.Interop;
+        var status = interop.AppUdpEchoClient(
             simulation.Handle,
             node.NativeHandle,
             destinationIp,
@@ -138,22 +126,22 @@ public readonly record struct FlowStatistics(
     /// <summary>
     /// Average delay per packet
     /// </summary>
-    public TimeSpan AverageDelay => RxPackets > 0 
-        ? TimeSpan.FromSeconds(DelaySum.TotalSeconds / RxPackets) 
+    public TimeSpan AverageDelay => RxPackets > 0
+        ? TimeSpan.FromSeconds(DelaySum.TotalSeconds / RxPackets)
         : TimeSpan.Zero;
 
     /// <summary>
     /// Average jitter
     /// </summary>
-    public TimeSpan AverageJitter => RxPackets > 0 
-        ? TimeSpan.FromSeconds(JitterSum.TotalSeconds / RxPackets) 
+    public TimeSpan AverageJitter => RxPackets > 0
+        ? TimeSpan.FromSeconds(JitterSum.TotalSeconds / RxPackets)
         : TimeSpan.Zero;
 
     /// <summary>
     /// Packet loss ratio (0.0 to 1.0)
     /// </summary>
-    public double PacketLossRatio => TxPackets > 0 
-        ? 1.0 - ((double)RxPackets / TxPackets) 
+    public double PacketLossRatio => TxPackets > 0
+        ? 1.0 - ((double)RxPackets / TxPackets)
         : 0.0;
 }
 
@@ -179,14 +167,13 @@ public sealed class FlowMonitor
     /// <summary>
     /// Installs flow monitor on all nodes in the simulation
     /// </summary>
-    /// <param name="simulation">Simulation context</param>
-    /// <returns>Flow monitor instance</returns>
     public static FlowMonitor InstallAll(Simulation simulation)
     {
         if (simulation == null)
             throw new ArgumentNullException(nameof(simulation));
 
-        var status = NativeMethods.flowmon_install_all(simulation.Handle, out nint handle);
+        var interop = simulation.Interop;
+        var status = interop.FlowMonInstallAll(simulation.Handle, out nint handle);
         Ns3Exception.ThrowIfError(status, simulation.Handle, nameof(InstallAll));
 
         return new FlowMonitor(simulation, new FlowMonHandle(handle));
@@ -195,10 +182,10 @@ public sealed class FlowMonitor
     /// <summary>
     /// Collects flow statistics
     /// </summary>
-    /// <returns>Aggregated flow statistics</returns>
     public FlowStatistics CollectStatistics()
     {
-        var status = NativeMethods.flowmon_collect(_simulation.Handle, NativeHandle, out var stats);
+        var interop = _simulation.Interop;
+        var status = interop.FlowMonCollect(_simulation.Handle, NativeHandle, out var stats);
         Ns3Exception.ThrowIfError(status, _simulation.Handle, nameof(CollectStatistics));
 
         return new FlowStatistics(
@@ -212,4 +199,3 @@ public sealed class FlowMonitor
         );
     }
 }
-

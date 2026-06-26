@@ -43,21 +43,26 @@ struct ns3_sim_t {
     std::map<uint64_t, Ptr<NetDevice>> devices;
     std::map<uint64_t, Ptr<Application>> apps;
     std::map<uint64_t, Ptr<FlowMonitor>> flowMons;
-    
+
     // Helpers (stateful objects reused for configuration)
     InternetStackHelper internetStack;
     Ipv4AddressHelper ipv4Helper;
-    
+
     // State
     std::atomic<bool> isRunning{false};
     std::string lastError;
     std::mutex errorMutex;
-    
+
     // ID generators
     uint64_t nextNodeId = 1;
     uint64_t nextDeviceId = 1;
     uint64_t nextAppId = 1;
     uint64_t nextFlowMonId = 1;
+
+    // Trace contexts — tracked for cleanup on sim_destroy (void* to avoid
+    // dependency on PacketTraceContext which is defined in anonymous namespace)
+    std::vector<void*> traceContexts;
+    std::mutex traceContextMutex;
     
     // Utility
     void SetError(const std::string& msg) {
@@ -262,8 +267,17 @@ NS3SHIM_API ns3_status sim_schedule(ns3_sim sim, double inSeconds, ns3_void_cb c
 
 NS3SHIM_API ns3_status sim_destroy(ns3_sim sim) {
     if (!sim) return NS3_OK; // NULL-safe, idempotent
-    
+
     try {
+        // Clean up trace contexts
+        {
+            std::lock_guard<std::mutex> lock(sim->traceContextMutex);
+            for (void* ptr : sim->traceContexts) {
+                delete static_cast<PacketTraceContext*>(ptr);
+            }
+            sim->traceContexts.clear();
+        }
+
         // Clean up ns-3 state
         Simulator::Destroy();
         delete sim;
@@ -610,33 +624,74 @@ NS3SHIM_API ns3_status app_stop(ns3_sim sim, ns3_app app, double atTimeSec) {
 // Tracing & Statistics
 // ============================================================================
 
-NS3SHIM_API ns3_status trace_subscribe_packet_events(ns3_sim sim, ns3_device dev, 
+NS3SHIM_API ns3_status trace_subscribe_packet_events(ns3_sim sim, ns3_device dev,
                                                       ns3_pkt_cb onTx, ns3_pkt_cb onRx, void* user) {
     if (!ValidateSim(sim) || !dev) return NS3_ERR;
-    
+
     try {
         Ptr<NetDevice> device = GetDevice(sim, dev);
         if (!device) return NS3_ERR;
-        
+
         uint64_t deviceId = HandleToId(dev);
-        
-        // Create persistent context (leaked intentionally - managed by ns-3 lifetime)
+
+        // Create persistent context — tracked in sim for cleanup on sim_destroy
         auto* ctx = new PacketTraceContext{onTx, onRx, user, deviceId};
-        
-        if (onTx) {
-            device->GetObject<PointToPointNetDevice>()->TraceConnectWithoutContext(
-                "PhyTxEnd",
-                MakeBoundCallback(&PacketTxCallback, ctx)
-            );
+        {
+            std::lock_guard<std::mutex> lock(sim->traceContextMutex);
+            sim->traceContexts.push_back(ctx);
         }
-        
-        if (onRx) {
-            device->GetObject<PointToPointNetDevice>()->TraceConnectWithoutContext(
-                "PhyRxEnd",
-                MakeBoundCallback(&PacketRxCallback, ctx)
-            );
+
+        bool connected = false;
+
+        // Try to connect via PointToPointNetDevice
+        if (auto p2pDev = DynamicCast<PointToPointNetDevice>(device)) {
+            if (onTx) {
+                p2pDev->TraceConnectWithoutContext(
+                    "PhyTxEnd",
+                    MakeBoundCallback(&PacketTxCallback, ctx));
+            }
+            if (onRx) {
+                p2pDev->TraceConnectWithoutContext(
+                    "PhyRxEnd",
+                    MakeBoundCallback(&PacketRxCallback, ctx));
+            }
+            connected = true;
         }
-        
+        // Try CsmaNetDevice
+        else if (auto csmaDev = DynamicCast<CsmaNetDevice>(device)) {
+            if (onTx) {
+                csmaDev->TraceConnectWithoutContext(
+                    "PhyTxEnd",
+                    MakeBoundCallback(&PacketTxCallback, ctx));
+            }
+            if (onRx) {
+                csmaDev->TraceConnectWithoutContext(
+                    "PhyRxEnd",
+                    MakeBoundCallback(&PacketRxCallback, ctx));
+            }
+            connected = true;
+        }
+        // Try WifiNetDevice
+        else if (auto wifiDev = DynamicCast<WifiNetDevice>(device)) {
+            if (onTx) {
+                wifiDev->TraceConnectWithoutContext(
+                    "PhyTxEnd",
+                    MakeBoundCallback(&PacketTxCallback, ctx));
+            }
+            if (onRx) {
+                wifiDev->TraceConnectWithoutContext(
+                    "PhyRxEnd",
+                    MakeBoundCallback(&PacketRxCallback, ctx));
+            }
+            connected = true;
+        }
+
+        if (!connected) {
+            sim->SetError("trace_subscribe_packet_events: unsupported device type — "
+                          "only PointToPoint, CSMA, and Wi-Fi devices are supported");
+            return NS3_ERR;
+        }
+
         return NS3_OK;
     } catch (const std::exception& e) {
         sim->SetError(std::string("trace_subscribe_packet_events failed: ") + e.what());
@@ -694,14 +749,14 @@ NS3SHIM_API ns3_status flowmon_collect(ns3_sim sim, ns3_flowmon fm, ns3_flow_sta
         uint64_t txPackets = 0, rxPackets = 0;
         uint64_t txBytes = 0, rxBytes = 0;
         double delaySum = 0.0, jitterSum = 0.0;
-        
+
         for (auto& flow : stats) {
             txPackets += flow.second.txPackets;
             rxPackets += flow.second.rxPackets;
             txBytes += flow.second.txBytes;
             rxBytes += flow.second.rxBytes;
             delaySum += flow.second.delaySum.GetSeconds();
-            delaySum += flow.second.jitterSum.GetSeconds();
+            jitterSum += flow.second.jitterSum.GetSeconds();
         }
         
         outStats->txPackets = txPackets;

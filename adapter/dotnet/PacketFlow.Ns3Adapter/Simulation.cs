@@ -5,9 +5,11 @@
 // - RAII-style resource management
 // - Event callback marshalling
 // - Thread-safe error handling
+//
+// Uses INativeInterop for testability — the default implementation delegates
+// to P/Invoke; unit tests inject a mock.
 
 using System.Runtime.InteropServices;
-using System.Threading.Channels;
 using PacketFlow.Ns3Adapter.Interop;
 
 namespace PacketFlow.Ns3Adapter;
@@ -17,24 +19,38 @@ namespace PacketFlow.Ns3Adapter;
 /// </summary>
 public sealed class Simulation : IDisposable
 {
+    private readonly INativeInterop _interop;
     private readonly SimHandle _handle;
     private bool _disposed;
 
+    // Track GCHandles for callbacks that may outlive the caller's scope.
+    // Scheduled callbacks: one-shot, freed after firing OR on Dispose if unfired.
+    // Trace callbacks: persistent, freed on Dispose when the native sim is destroyed.
+    private readonly List<GCHandle> _scheduledHandles = new();
+    private readonly List<GCHandle> _traceHandles = new();
+    private readonly object _handleLock = new();
+
     static Simulation()
     {
-        // Initialize native library resolver
         NativeLibraryResolver.Initialize();
     }
 
     /// <summary>
-    /// Creates a new simulation context
+    /// Creates a new simulation context using the real native interop.
     /// </summary>
-    public Simulation()
+    public Simulation() : this(NativeInterop.Instance, ownsNative: true)
     {
-        var status = NativeMethods.sim_create(out nint handle);
-        Ns3Exception.ThrowIfError(status, nint.Zero, nameof(NativeMethods.sim_create));
+    }
 
-        _handle = new SimHandle(handle);
+    /// <summary>
+    /// Internal constructor for unit testing with a mock interop.
+    /// </summary>
+    internal Simulation(INativeInterop interop, bool ownsNative)
+    {
+        _interop = interop ?? throw new ArgumentNullException(nameof(interop));
+        var status = _interop.SimCreate(out nint handle);
+        Ns3Exception.ThrowIfError(status, nint.Zero, nameof(NativeMethods.sim_create));
+        _handle = new SimHandle(handle, ownsNative);
     }
 
     /// <summary>
@@ -43,13 +59,18 @@ public sealed class Simulation : IDisposable
     internal nint Handle => _handle.DangerousGetHandle();
 
     /// <summary>
+    /// Gets the native interop layer (internal for helpers that need it).
+    /// </summary>
+    internal INativeInterop Interop => _interop;
+
+    /// <summary>
     /// Sets the random number generator seed
     /// </summary>
     /// <param name="seed">RNG seed value</param>
     public void SetSeed(uint seed)
     {
         ThrowIfDisposed();
-        var status = NativeMethods.sim_set_seed(Handle, seed);
+        var status = _interop.SimSetSeed(Handle, seed);
         Ns3Exception.ThrowIfError(status, Handle, nameof(SetSeed));
     }
 
@@ -59,7 +80,7 @@ public sealed class Simulation : IDisposable
     public void Run()
     {
         ThrowIfDisposed();
-        var status = NativeMethods.sim_run(Handle);
+        var status = _interop.SimRun(Handle);
         Ns3Exception.ThrowIfError(status, Handle, nameof(Run));
     }
 
@@ -70,7 +91,7 @@ public sealed class Simulation : IDisposable
     public void Stop(TimeSpan atTime)
     {
         ThrowIfDisposed();
-        var status = NativeMethods.sim_stop(Handle, atTime.TotalSeconds);
+        var status = _interop.SimStop(Handle, atTime.TotalSeconds);
         Ns3Exception.ThrowIfError(status, Handle, nameof(Stop));
     }
 
@@ -82,7 +103,7 @@ public sealed class Simulation : IDisposable
         get
         {
             ThrowIfDisposed();
-            var status = NativeMethods.sim_is_running(Handle, out int isRunning);
+            var status = _interop.SimIsRunning(Handle, out int isRunning);
             Ns3Exception.ThrowIfError(status, Handle, nameof(IsRunning));
             return isRunning != 0;
         }
@@ -96,14 +117,16 @@ public sealed class Simulation : IDisposable
         get
         {
             ThrowIfDisposed();
-            var status = NativeMethods.sim_now(Handle, out double timeSec);
+            var status = _interop.SimNow(Handle, out double timeSec);
             Ns3Exception.ThrowIfError(status, Handle, nameof(Now));
             return TimeSpan.FromSeconds(timeSec);
         }
     }
 
     /// <summary>
-    /// Schedules a callback to be invoked at a future time
+    /// Schedules a callback to be invoked at a future time.
+    /// The callback fires exactly once. If the simulation stops before the
+    /// scheduled time, the handle is freed on Dispose.
     /// </summary>
     /// <param name="delay">Delay from current time</param>
     /// <param name="callback">Action to invoke</param>
@@ -113,30 +136,55 @@ public sealed class Simulation : IDisposable
         if (callback == null)
             throw new ArgumentNullException(nameof(callback));
 
-        // Create a GC handle to keep the callback alive
         var gcHandle = GCHandle.Alloc(callback);
-        
+
+        lock (_handleLock)
+        {
+            _scheduledHandles.Add(gcHandle);
+        }
+
         NativeMethods.VoidCallback nativeCallback = (user) =>
         {
             try
             {
-                var handle = GCHandle.FromIntPtr(user);
-                var action = (Action)handle.Target!;
+                var h = GCHandle.FromIntPtr(user);
+                var action = (Action)h.Target!;
                 action();
             }
             finally
             {
-                // Free the GC handle after invocation
-                GCHandle.FromIntPtr(user).Free();
+                lock (_handleLock)
+                {
+                    var h = GCHandle.FromIntPtr(user);
+                    _scheduledHandles.Remove(h);
+                    if (h.IsAllocated)
+                        h.Free();
+                }
             }
         };
 
-        var status = NativeMethods.sim_schedule(Handle, delay.TotalSeconds, nativeCallback, GCHandle.ToIntPtr(gcHandle));
-        
+        var status = _interop.SimSchedule(Handle, delay.TotalSeconds, nativeCallback, GCHandle.ToIntPtr(gcHandle));
+
         if (status != NativeMethods.Ns3Status.Ok)
         {
+            lock (_handleLock)
+            {
+                _scheduledHandles.Remove(gcHandle);
+            }
             gcHandle.Free();
             Ns3Exception.ThrowIfError(status, Handle, nameof(Schedule));
+        }
+    }
+
+    /// <summary>
+    /// Registers a GCHandle that must be kept alive for the lifetime of the
+    /// simulation (e.g., packet trace delegate handles). Freed on Dispose.
+    /// </summary>
+    internal void RegisterTraceHandle(GCHandle handle)
+    {
+        lock (_handleLock)
+        {
+            _traceHandles.Add(handle);
         }
     }
 
@@ -154,7 +202,7 @@ public sealed class Simulation : IDisposable
         var handles = new nint[count];
         fixed (nint* ptr = handles)
         {
-            var status = NativeMethods.nodes_create(Handle, (uint)count, ptr);
+            var status = _interop.NodesCreate(Handle, (uint)count, ptr);
             Ns3Exception.ThrowIfError(status, Handle, nameof(CreateNodes));
         }
 
@@ -185,7 +233,7 @@ public sealed class Simulation : IDisposable
 
         fixed (nint* ptr = handles)
         {
-            var status = NativeMethods.internet_install(Handle, ptr, (uint)nodes.Length);
+            var status = _interop.InternetInstall(Handle, ptr, (uint)nodes.Length);
             Ns3Exception.ThrowIfError(status, Handle, nameof(InstallInternetStack));
         }
     }
@@ -196,7 +244,7 @@ public sealed class Simulation : IDisposable
     public void PopulateRoutingTables()
     {
         ThrowIfDisposed();
-        var status = NativeMethods.ipv4_populate_routing_tables(Handle);
+        var status = _interop.Ipv4PopulateRoutingTables(Handle);
         Ns3Exception.ThrowIfError(status, Handle, nameof(PopulateRoutingTables));
     }
 
@@ -220,7 +268,7 @@ public sealed class Simulation : IDisposable
 
         fixed (nint* ptr = handles)
         {
-            var status = NativeMethods.ipv4_assign(Handle, ptr, (uint)devices.Length, networkBase, mask);
+            var status = _interop.Ipv4Assign(Handle, ptr, (uint)devices.Length, networkBase, mask);
             Ns3Exception.ThrowIfError(status, Handle, nameof(AssignIpv4Addresses));
         }
     }
@@ -232,14 +280,36 @@ public sealed class Simulation : IDisposable
     }
 
     /// <summary>
-    /// Disposes the simulation and frees all resources
+    /// Disposes the simulation and frees all resources, including any
+    /// unfired scheduled callbacks and trace subscription handles.
     /// </summary>
     public void Dispose()
     {
         if (_disposed)
             return;
 
+        // Destroy the native simulation FIRST — this tears down all trace
+        // sources and the event scheduler, guaranteeing no callback can fire.
         _handle?.Dispose();
+
+        // Now safe to free all tracked GCHandles.
+        lock (_handleLock)
+        {
+            foreach (var h in _scheduledHandles)
+            {
+                if (h.IsAllocated)
+                    h.Free();
+            }
+            _scheduledHandles.Clear();
+
+            foreach (var h in _traceHandles)
+            {
+                if (h.IsAllocated)
+                    h.Free();
+            }
+            _traceHandles.Clear();
+        }
+
         _disposed = true;
         GC.SuppressFinalize(this);
     }
@@ -277,7 +347,7 @@ public sealed class Node
     /// <param name="z">Z coordinate (meters)</param>
     public void SetPosition(double x, double y, double z)
     {
-        var status = NativeMethods.mobility_set_constant_position(_simulation.Handle, NativeHandle, x, y, z);
+        var status = _simulation.Interop.MobilitySetConstantPosition(_simulation.Handle, NativeHandle, x, y, z);
         Ns3Exception.ThrowIfError(status, _simulation.Handle, nameof(SetPosition));
     }
 }
@@ -312,12 +382,14 @@ public sealed class Device
     /// <param name="filePrefix">Prefix for PCAP file name</param>
     public void EnablePcap(string filePrefix)
     {
-        var status = NativeMethods.pcap_enable(_simulation.Handle, NativeHandle, filePrefix);
+        var status = _simulation.Interop.PcapEnable(_simulation.Handle, NativeHandle, filePrefix);
         Ns3Exception.ThrowIfError(status, _simulation.Handle, nameof(EnablePcap));
     }
 
     /// <summary>
-    /// Subscribes to packet TX/RX events
+    /// Subscribes to packet TX/RX events.
+    /// The callbacks remain active for the lifetime of the simulation.
+    /// Delegate handles are freed automatically when the simulation is disposed.
     /// </summary>
     /// <param name="onTx">Callback for transmitted packets (may be null)</param>
     /// <param name="onRx">Callback for received packets (may be null)</param>
@@ -331,36 +403,37 @@ public sealed class Device
 
         if (onTx != null)
         {
-            txHandle = GCHandle.Alloc(onTx);
             nativeTx = (user, deviceId, timeSec, bytes) =>
             {
-                var handle = GCHandle.FromIntPtr(user);
-                var callback = (Action<PacketEvent>)handle.Target!;
-                callback(new PacketEvent(deviceId, TimeSpan.FromSeconds(timeSec), bytes));
+                onTx(new PacketEvent(deviceId, TimeSpan.FromSeconds(timeSec), bytes));
             };
+            txHandle = GCHandle.Alloc(nativeTx);
         }
 
         if (onRx != null)
         {
-            rxHandle = GCHandle.Alloc(onRx);
             nativeRx = (user, deviceId, timeSec, bytes) =>
             {
-                var handle = GCHandle.FromIntPtr(user);
-                var callback = (Action<PacketEvent>)handle.Target!;
-                callback(new PacketEvent(deviceId, TimeSpan.FromSeconds(timeSec), bytes));
+                onRx(new PacketEvent(deviceId, TimeSpan.FromSeconds(timeSec), bytes));
             };
+            rxHandle = GCHandle.Alloc(nativeRx);
         }
 
-        var userPtr = txHandle.HasValue ? GCHandle.ToIntPtr(txHandle.Value) : 
+        var userPtr = txHandle.HasValue ? GCHandle.ToIntPtr(txHandle.Value) :
                       rxHandle.HasValue ? GCHandle.ToIntPtr(rxHandle.Value) : nint.Zero;
-        var status = NativeMethods.trace_subscribe_packet_events(_simulation.Handle, NativeHandle, nativeTx, nativeRx, userPtr);
-        
+        var status = _simulation.Interop.TraceSubscribePacketEvents(_simulation.Handle, NativeHandle, nativeTx, nativeRx, userPtr);
+
         if (status != NativeMethods.Ns3Status.Ok)
         {
             txHandle?.Free();
             rxHandle?.Free();
             Ns3Exception.ThrowIfError(status, _simulation.Handle, nameof(SubscribeToPacketEvents));
         }
+
+        if (txHandle.HasValue)
+            _simulation.RegisterTraceHandle(txHandle.Value);
+        if (rxHandle.HasValue)
+            _simulation.RegisterTraceHandle(rxHandle.Value);
     }
 }
 
@@ -368,4 +441,3 @@ public sealed class Device
 /// Represents a packet event (TX or RX)
 /// </summary>
 public readonly record struct PacketEvent(ulong DeviceId, TimeSpan Time, uint Bytes);
-
