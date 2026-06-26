@@ -107,11 +107,24 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<TemplateDbContext>();
-    
+
     if (app.Environment.IsDevelopment())
     {
         // For in-memory database
         context.Database.EnsureCreated();
+
+        // Seed default tags (EnsureCreated doesn't run EF Core HasData)
+        if (!context.Tags.Any())
+        {
+            context.Tags.AddRange(
+                new TemplateService.Core.Models.Tag { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "wifi", Description = "Wireless network topologies", ColorCode = "#36b1ff", CreatedAt = DateTime.UtcNow },
+                new TemplateService.Core.Models.Tag { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), Name = "p2p", Description = "Point-to-point connections", ColorCode = "#8ffe0c", CreatedAt = DateTime.UtcNow },
+                new TemplateService.Core.Models.Tag { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "csma", Description = "Carrier-sense multiple access", ColorCode = "#febc2e", CreatedAt = DateTime.UtcNow },
+                new TemplateService.Core.Models.Tag { Id = Guid.Parse("44444444-4444-4444-4444-444444444444"), Name = "lte", Description = "Long-term evolution networks", ColorCode = "#ff5f57", CreatedAt = DateTime.UtcNow },
+                new TemplateService.Core.Models.Tag { Id = Guid.Parse("55555555-5555-5555-5555-555555555555"), Name = "mesh", Description = "Mesh network topologies", ColorCode = "#28c840", CreatedAt = DateTime.UtcNow }
+            );
+            context.SaveChanges();
+        }
     }
     else
     {

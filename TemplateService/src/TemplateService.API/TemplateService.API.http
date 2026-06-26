@@ -1,6 +1,50 @@
 @TemplateService.API_HostAddress = http://localhost:5024
 
-GET {{TemplateService.API_HostAddress}}/weatherforecast/
+### Get public templates
+GET {{TemplateService.API_HostAddress}}/api/templates/public
 Accept: application/json
 
 ###
+
+### Search templates
+GET {{TemplateService.API_HostAddress}}/api/templates/search?q=wifi
+Accept: application/json
+
+###
+
+### Get by tags
+GET {{TemplateService.API_HostAddress}}/api/templates/tags?tags=mesh&tags=wifi
+Accept: application/json
+
+###
+
+### Create template (requires auth token)
+POST {{TemplateService.API_HostAddress}}/api/templates
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Test Topology",
+  "description": "A simple star topology for testing",
+  "topologyJson": "{\"nodes\":[{\"id\":\"r1\",\"type\":\"router\"}]}",
+  "isPublic": false,
+  "tags": ["wifi", "mesh"]
+}
+
+###
+
+### Get my templates (requires auth token)
+GET {{TemplateService.API_HostAddress}}/api/templates/my
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+### Clone template (requires auth token)
+POST {{TemplateService.API_HostAddress}}/api/templates/{{templateId}}/clone
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newName": "My Cloned Topology"
+}

@@ -9,7 +9,7 @@ public interface ITemplateRepository
 {
     Task<Template?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<Template>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default);
-    Task<List<Template>> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default);
+    Task<List<Template>> GetByOwnerIdAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default);
     Task<List<Template>> GetPublicTemplatesAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task<List<Template>> SearchAsync(string searchTerm, int page, int pageSize, CancellationToken cancellationToken = default);
     Task<List<Template>> GetByTagsAsync(List<string> tags, int page, int pageSize, CancellationToken cancellationToken = default);

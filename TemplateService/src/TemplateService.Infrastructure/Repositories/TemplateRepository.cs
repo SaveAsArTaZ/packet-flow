@@ -36,13 +36,15 @@ public class TemplateRepository : ITemplateRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Template>> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default)
+    public async Task<List<Template>> GetByOwnerIdAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         return await _context.Templates
             .Include(t => t.Tags)
             .ThenInclude(tt => tt.Tag)
             .Where(t => t.OwnerId == ownerId)
             .OrderByDescending(t => t.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
     }
 

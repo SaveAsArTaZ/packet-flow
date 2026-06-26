@@ -410,7 +410,7 @@ public class ComprehensiveTemplateServiceTests
             CreateTestTemplate(Guid.NewGuid(), userId, isPublic: false)
         };
 
-        _mockTemplateRepo.Setup(r => r.GetByOwnerIdAsync(userId, default))
+        _mockTemplateRepo.Setup(r => r.GetByOwnerIdAsync(userId, 1, 20, default))
             .ReturnsAsync(templates);
 
         // Act

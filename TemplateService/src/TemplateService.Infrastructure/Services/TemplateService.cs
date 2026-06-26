@@ -41,8 +41,8 @@ public class TemplateService : ITemplateService
 
     public async Task<List<TemplateSummaryDto>> GetMyTemplatesAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var templates = await _templateRepository.GetByOwnerIdAsync(userId, cancellationToken);
-        return templates.Skip((page - 1) * pageSize).Take(pageSize).Select(MapToSummaryDto).ToList();
+        var templates = await _templateRepository.GetByOwnerIdAsync(userId, page, pageSize, cancellationToken);
+        return templates.Select(MapToSummaryDto).ToList();
     }
 
     public async Task<List<TemplateSummaryDto>> GetPublicTemplatesAsync(int page, int pageSize, CancellationToken cancellationToken = default)
