@@ -1,0 +1,52 @@
+{
+  "HERO": {
+    "EYEBROW": "VISUAL NETWORK SIMULATION",
+    "TITLE_1": "Packet",
+    "TITLE_2": "Flow",
+    "SUBTITLE_1": "Explore data as it traverses complex routing topologies.",
+    "SUBTITLE_2": "Built for engineers who think in packets.",
+    "BTN_DEMO": "Explore the demo",
+    "BTN_LEARN": "Learn more"
+  },
+  "NAV": {
+    "HOME": "Home",
+    "LOGIN": "Login",
+    "SIGNUP": "Sign Up",
+    "LOGOUT": "Logout",
+    "PROFILE": "Profile"
+  },
+  "AUTH": {
+    "LOGIN_TITLE": "Welcome back",
+    "LOGIN_SUBTITLE": "Sign in to your account",
+    "EMAIL": "Email or username",
+    "PASSWORD": "Password",
+    "LOGIN_BTN": "Sign in",
+    "NO_ACCOUNT": "Don't have an account?",
+    "SIGNUP_LINK": "Create one",
+    "SIGNUP_TITLE": "Create your account",
+    "SIGNUP_SUBTITLE": "Start simulating networks today",
+    "FULL_NAME": "Full name",
+    "USERNAME": "Username",
+    "CONFIRM_PASSWORD": "Confirm password",
+    "SIGNUP_BTN": "Create account",
+    "HAS_ACCOUNT": "Already have an account?",
+    "LOGIN_LINK": "Sign in",
+    "LOGGING_IN": "Signing in...",
+    "CREATING_ACCOUNT": "Creating account..."
+  },
+  "ERRORS": {
+    "REQUIRED": "This field is required",
+    "EMAIL_INVALID": "Please enter a valid email",
+    "PASSWORD_MIN": "Password must be at least 8 characters",
+    "PASSWORD_MATCH": "Passwords do not match",
+    "USERNAME_MIN": "Username must be at least 3 characters",
+    "LOGIN_FAILED": "Invalid credentials. Please try again.",
+    "SIGNUP_FAILED": "Registration failed. Please try again.",
+    "GENERIC": "Something went wrong. Please try again."
+  },
+  "LANGUAGE": {
+    "EN": "English",
+    "FR": "Français",
+    "FA": "فارسی"
+  }
+}

@@ -4,49 +4,100 @@
       <div class="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mx-auto mb-4">
         <span class="text-background text-lg font-extrabold">P</span>
       </div>
-      <h2 class="text-2xl font-bold tracking-tight">Create an account</h2>
-      <p class="text-sm text-muted-foreground mt-2">Start building your network simulations</p>
+      <h2 class="text-2xl font-bold tracking-tight">{{ 'AUTH.SIGNUP_TITLE' | translate }}</h2>
+      <p class="text-sm text-muted-foreground mt-2">{{ 'AUTH.SIGNUP_SUBTITLE' | translate }}</p>
     </div>
 
-    <form class="space-y-4" (submit)="$event.preventDefault()">
-      <div class="space-y-2">
-        <label class="text-sm font-medium" for="name">Full name</label>
-        <input
-          id="name"
-          type="text"
-          placeholder="Jane Smith"
-          class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        />
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- Server error -->
+      @if (serverError) {
+        <div class="rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          {{ serverError }}
+        </div>
+      }
+
+      <!-- Full Name -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-2">
+          <label class="text-sm font-medium" for="signup-first">{{ 'AUTH.FULL_NAME' | translate }}</label>
+          <input id="signup-first" type="text" formControlName="firstName"
+            class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            placeholder="John" />
+        </div>
+        <div class="space-y-2 pt-[1.625rem]">
+          <input id="signup-last" type="text" formControlName="lastName"
+            class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            placeholder="Doe" />
+        </div>
       </div>
+
+      <!-- Username -->
       <div class="space-y-2">
-        <label class="text-sm font-medium" for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          placeholder="name@example.com"
+        <label class="text-sm font-medium" for="signup-username">{{ 'AUTH.USERNAME' | translate }}</label>
+        <input id="signup-username" type="text" formControlName="username"
           class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        />
+          [placeholder]="'AUTH.USERNAME' | translate" autocomplete="username" />
+        @if (form.controls.username.touched && form.controls.username.errors?.['required']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.REQUIRED' | translate }}</p>
+        }
+        @if (form.controls.username.touched && form.controls.username.errors?.['minlength']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.USERNAME_MIN' | translate }}</p>
+        }
       </div>
+
+      <!-- Email -->
       <div class="space-y-2">
-        <label class="text-sm font-medium" for="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          placeholder="••••••••"
+        <label class="text-sm font-medium" for="signup-email">{{ 'AUTH.EMAIL' | translate }}</label>
+        <input id="signup-email" type="email" formControlName="email"
           class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        />
+          [placeholder]="'AUTH.EMAIL' | translate" autocomplete="email" />
+        @if (form.controls.email.touched && form.controls.email.errors?.['required']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.REQUIRED' | translate }}</p>
+        }
+        @if (form.controls.email.touched && form.controls.email.errors?.['email']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.EMAIL_INVALID' | translate }}</p>
+        }
       </div>
+
+      <!-- Password -->
+      <div class="space-y-2">
+        <label class="text-sm font-medium" for="signup-password">{{ 'AUTH.PASSWORD' | translate }}</label>
+        <input id="signup-password" type="password" formControlName="password"
+          class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          [placeholder]="'AUTH.PASSWORD' | translate" autocomplete="new-password" />
+        @if (form.controls.password.touched && form.controls.password.errors?.['required']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.REQUIRED' | translate }}</p>
+        }
+        @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.PASSWORD_MIN' | translate }}</p>
+        }
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="space-y-2">
+        <label class="text-sm font-medium" for="signup-confirm">{{ 'AUTH.CONFIRM_PASSWORD' | translate }}</label>
+        <input id="signup-confirm" type="password" formControlName="confirmPassword"
+          class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          [placeholder]="'AUTH.CONFIRM_PASSWORD' | translate" autocomplete="new-password" />
+        @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.errors?.['required']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.REQUIRED' | translate }}</p>
+        }
+        @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.errors?.['mismatch']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.PASSWORD_MATCH' | translate }}</p>
+        }
+      </div>
+
       <button
-        type="submit"
-        class="w-full h-10 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+        type="submit" [disabled]="auth.isLoading()"
+        class="w-full h-10 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
       >
-        Create account
+        @if (auth.isLoading()) { {{ 'AUTH.CREATING_ACCOUNT' | translate }} } @else { {{ 'AUTH.SIGNUP_BTN' | translate }} }
       </button>
     </form>
 
     <p class="text-center text-sm text-muted-foreground">
-      Already have an account?
-      <a routerLink="/login" class="font-medium text-foreground underline underline-offset-4 hover:opacity-80">Log in</a>
+      {{ 'AUTH.HAS_ACCOUNT' | translate }}
+      <a routerLink="/login" class="font-medium text-foreground underline underline-offset-4 hover:opacity-80">{{ 'AUTH.LOGIN_LINK' | translate }}</a>
     </p>
   </div>
 </section>

@@ -4,40 +4,55 @@
       <div class="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mx-auto mb-4">
         <span class="text-background text-lg font-extrabold">P</span>
       </div>
-      <h2 class="text-2xl font-bold tracking-tight">Welcome back</h2>
-      <p class="text-sm text-muted-foreground mt-2">Sign in to your account</p>
+      <h2 class="text-2xl font-bold tracking-tight">{{ 'AUTH.LOGIN_TITLE' | translate }}</h2>
+      <p class="text-sm text-muted-foreground mt-2">{{ 'AUTH.LOGIN_SUBTITLE' | translate }}</p>
     </div>
 
-    <form class="space-y-4" (submit)="$event.preventDefault()">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- Server error -->
+      @if (serverError) {
+        <div class="rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          {{ serverError }}
+        </div>
+      }
+
       <div class="space-y-2">
-        <label class="text-sm font-medium" for="email">Email</label>
+        <label class="text-sm font-medium" for="login-email">{{ 'AUTH.EMAIL' | translate }}</label>
         <input
-          id="email"
-          type="email"
-          placeholder="name@example.com"
+          id="login-email" type="text" formControlName="usernameOrEmail"
           class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          [placeholder]="'AUTH.EMAIL' | translate" autocomplete="username"
         />
+        @if (form.controls.usernameOrEmail.touched && form.controls.usernameOrEmail.errors?.['required']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.REQUIRED' | translate }}</p>
+        }
       </div>
       <div class="space-y-2">
-        <label class="text-sm font-medium" for="password">Password</label>
+        <label class="text-sm font-medium" for="login-password">{{ 'AUTH.PASSWORD' | translate }}</label>
         <input
-          id="password"
-          type="password"
-          placeholder="••••••••"
+          id="login-password" type="password" formControlName="password"
           class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          [placeholder]="'AUTH.PASSWORD' | translate" autocomplete="current-password"
         />
+        @if (form.controls.password.touched && form.controls.password.errors?.['required']) {
+          <p class="text-xs text-red-500">{{ 'ERRORS.REQUIRED' | translate }}</p>
+        }
       </div>
+      <label class="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+        <input type="checkbox" formControlName="rememberMe" class="rounded border-border" />
+        Remember me
+      </label>
       <button
-        type="submit"
-        class="w-full h-10 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+        type="submit" [disabled]="auth.isLoading()"
+        class="w-full h-10 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
       >
-        Sign in
+        @if (auth.isLoading()) { {{ 'AUTH.LOGGING_IN' | translate }} } @else { {{ 'AUTH.LOGIN_BTN' | translate }} }
       </button>
     </form>
 
     <p class="text-center text-sm text-muted-foreground">
-      Don't have an account?
-      <a routerLink="/signup" class="font-medium text-foreground underline underline-offset-4 hover:opacity-80">Sign up</a>
+      {{ 'AUTH.NO_ACCOUNT' | translate }}
+      <a routerLink="/signup" class="font-medium text-foreground underline underline-offset-4 hover:opacity-80">{{ 'AUTH.SIGNUP_LINK' | translate }}</a>
     </p>
   </div>
 </section>

@@ -1,0 +1,52 @@
+{
+  "HERO": {
+    "EYEBROW": "SIMULATION RÉSEAU VISUELLE",
+    "TITLE_1": "Packet",
+    "TITLE_2": "Flow",
+    "SUBTITLE_1": "Explorez les données qui traversent des topologies de routage complexes.",
+    "SUBTITLE_2": "Conçu pour les ingénieurs qui pensent en paquets.",
+    "BTN_DEMO": "Explorer la démo",
+    "BTN_LEARN": "En savoir plus"
+  },
+  "NAV": {
+    "HOME": "Accueil",
+    "LOGIN": "Connexion",
+    "SIGNUP": "S'inscrire",
+    "LOGOUT": "Déconnexion",
+    "PROFILE": "Profil"
+  },
+  "AUTH": {
+    "LOGIN_TITLE": "Bon retour",
+    "LOGIN_SUBTITLE": "Connectez-vous à votre compte",
+    "EMAIL": "Email ou nom d'utilisateur",
+    "PASSWORD": "Mot de passe",
+    "LOGIN_BTN": "Se connecter",
+    "NO_ACCOUNT": "Pas encore de compte ?",
+    "SIGNUP_LINK": "Créer un compte",
+    "SIGNUP_TITLE": "Créez votre compte",
+    "SIGNUP_SUBTITLE": "Commencez à simuler des réseaux aujourd'hui",
+    "FULL_NAME": "Nom complet",
+    "USERNAME": "Nom d'utilisateur",
+    "CONFIRM_PASSWORD": "Confirmer le mot de passe",
+    "SIGNUP_BTN": "Créer le compte",
+    "HAS_ACCOUNT": "Vous avez déjà un compte ?",
+    "LOGIN_LINK": "Se connecter",
+    "LOGGING_IN": "Connexion en cours...",
+    "CREATING_ACCOUNT": "Création du compte..."
+  },
+  "ERRORS": {
+    "REQUIRED": "Ce champ est obligatoire",
+    "EMAIL_INVALID": "Veuillez entrer un email valide",
+    "PASSWORD_MIN": "Le mot de passe doit contenir au moins 8 caractères",
+    "PASSWORD_MATCH": "Les mots de passe ne correspondent pas",
+    "USERNAME_MIN": "Le nom d'utilisateur doit contenir au moins 3 caractères",
+    "LOGIN_FAILED": "Identifiants invalides. Veuillez réessayer.",
+    "SIGNUP_FAILED": "L'inscription a échoué. Veuillez réessayer.",
+    "GENERIC": "Quelque chose s'est mal passé. Veuillez réessayer."
+  },
+  "LANGUAGE": {
+    "EN": "English",
+    "FR": "Français",
+    "FA": "فارسی"
+  }
+}

@@ -2,13 +2,14 @@ import { Component, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UiButtonComponent } from '../ui-button/ui-button.component';
 import { TypewriterComponent } from '../typewriter/typewriter.component';
+import { TranslatePipe } from '@ngx-translate/core';
 import { NetworkBgComponent } from '../network-bg/network-bg.component';
 import gsap from 'gsap';
 
 @Component({
   selector: 'pf-hero',
   standalone: true,
-  imports: [CommonModule, UiButtonComponent, TypewriterComponent, NetworkBgComponent],
+  imports: [CommonModule, TranslatePipe, UiButtonComponent, TypewriterComponent, NetworkBgComponent],
   templateUrl: './hero.component.html',
   styleUrl: './hero.component.css',
 })

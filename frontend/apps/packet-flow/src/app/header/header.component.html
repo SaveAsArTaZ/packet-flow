@@ -9,20 +9,31 @@
     </a>
 
     <!-- Right actions -->
-    <div class="flex items-center gap-2 sm:gap-3">
+    <div class="flex items-center gap-1 sm:gap-2">
+      <!-- Language switcher -->
+      <div class="relative" [attr.dir]="lang.currentDir">
+        <select
+          class="appearance-none h-8 px-2 text-xs font-medium rounded-md border border-border bg-background text-foreground cursor-pointer hover:bg-muted transition-colors"
+          [value]="lang.currentLang()"
+          (change)="switchLang($any($event.target).value)"
+        >
+          @for (l of lang.available; track l.code) {
+            <option [value]="l.code">{{ l.label }}</option>
+          }
+        </select>
+      </div>
+
       <!-- Theme toggle -->
       <button
         class="inline-flex items-center justify-center w-9 h-9 rounded-md border border-border hover:bg-muted transition-colors"
         (click)="toggleTheme()"
         [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
       >
-        <!-- Sun icon (light mode) -->
         @if (theme.isDark()) {
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         } @else {
-          <!-- Moon icon (dark mode) -->
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
@@ -30,18 +41,27 @@
       </button>
 
       <!-- Auth buttons -->
-      <a
-        routerLink="/login"
-        class="inline-flex items-center justify-center h-9 px-3 text-sm font-medium rounded-md hover:bg-muted transition-colors"
-      >
-        Log in
-      </a>
-      <a
-        routerLink="/signup"
-        class="inline-flex items-center justify-center h-9 px-4 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-      >
-        Sign up
-      </a>
+      @if (auth.isAuthenticated()) {
+        <button
+          class="inline-flex items-center justify-center h-9 px-3 text-sm font-medium rounded-md hover:bg-muted transition-colors"
+          (click)="auth.logout()"
+        >
+          {{ 'NAV.LOGOUT' | translate }}
+        </button>
+      } @else {
+        <a
+          routerLink="/login"
+          class="inline-flex items-center justify-center h-9 px-3 text-sm font-medium rounded-md hover:bg-muted transition-colors"
+        >
+          {{ 'NAV.LOGIN' | translate }}
+        </a>
+        <a
+          routerLink="/signup"
+          class="inline-flex items-center justify-center h-9 px-4 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          {{ 'NAV.SIGNUP' | translate }}
+        </a>
+      }
     </div>
   </div>
 </header>
