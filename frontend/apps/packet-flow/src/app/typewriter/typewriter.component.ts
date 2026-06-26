@@ -56,6 +56,7 @@ export class TypewriterComponent implements AfterViewInit, OnDestroy {
   @Input() speed = 30; // ms per character
   @Input() delay = 0; // ms delay before starting (relative to becoming active)
   @Input() cursor = true; // show blinking cursor while typing
+  @Input() persistentCursor = true; // keep cursor blinking after done (home page) or hide it (login/signup)
   @Input() scrollTrigger = true; // wait for scroll vs start immediately
 
   /** Emitted when this typewriter finishes typing its text */
@@ -166,11 +167,13 @@ export class TypewriterComponent implements AfterViewInit, OnDestroy {
         },
         onComplete: () => {
           this.visibleText.set(snapshot);
-          // Don't stop the cursor blink here — the cursor keeps blinking
-          // on the last typed word. When the next job starts, the
-          // activeId$ subscription will call stopCursorBlink() for us.
           this.done.set(true);
           this.finished.emit();
+          // If not persistent, hide cursor after typing finishes
+          if (!this.persistentCursor) {
+            this.stopCursorBlink();
+            this.showCursor.set(false);
+          }
           resolve();
         },
       });

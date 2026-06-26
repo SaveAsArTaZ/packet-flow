@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -17,18 +17,18 @@ export class DashboardComponent implements OnInit {
   readonly auth = inject(AuthService);
   readonly templateSvc = inject(TemplateService);
 
-  activeTab: Tab = 'my';
-  searchQuery = '';
-  searchResults: TemplateSummary[] = [];
-  hasSearched = false;
+  activeTab = signal<Tab>('my');
+  searchQuery = signal('');
+  searchResults = signal<TemplateSummary[]>([]);
+  hasSearched = signal(false);
 
   ngOnInit(): void {
     this.loadMyTemplates();
   }
 
   switchTab(tab: Tab): void {
-    this.activeTab = tab;
-    this.hasSearched = false;
+    this.activeTab.set(tab);
+    this.hasSearched.set(false);
     if (tab === 'my') this.loadMyTemplates();
     else if (tab === 'public') this.loadPublic();
   }
@@ -42,12 +42,12 @@ export class DashboardComponent implements OnInit {
   }
 
   onSearch(): void {
-    const q = this.searchQuery.trim();
+    const q = this.searchQuery().trim();
     if (!q) return;
-    this.hasSearched = true;
+    this.hasSearched.set(true);
     this.templateSvc.search(q).subscribe({
-      next: (data) => (this.searchResults = data),
-      error: () => (this.searchResults = []),
+      next: (data) => this.searchResults.set(data),
+      error: () => this.searchResults.set([]),
     });
   }
 
@@ -65,7 +65,7 @@ export class DashboardComponent implements OnInit {
   }
 
   get templateList(): TemplateSummary[] {
-    if (this.activeTab === 'search') return this.searchResults;
+    if (this.activeTab() === 'search') return this.searchResults();
     return this.templateSvc.templates();
   }
 

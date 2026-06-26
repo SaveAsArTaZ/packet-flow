@@ -39,12 +39,16 @@
     </p>
 
     <!-- Decorative line -->
-    <div #decorLine class="w-24 h-px bg-foreground/20 mb-8 origin-left"></div>
+    <div #decorLine class="w-24 h-px bg-foreground/20 mb-8 origin-left invisible"></div>
 
     <!-- Buttons -->
-    <div #actions class="flex flex-wrap gap-3 opacity-0">
-      <ui-button size="lg">{{ 'HERO.BTN_DEMO' | translate }}</ui-button>
-      <ui-button variant="outline" size="lg">{{ 'HERO.BTN_LEARN' | translate }}</ui-button>
+    <div #actions class="flex flex-wrap gap-3 invisible">
+      <a routerLink="/signup" class="inline-flex items-center justify-center h-11 px-8 rounded-md bg-foreground text-background border border-foreground font-medium text-sm hover:bg-foreground/90 transition-colors">
+        {{ 'HERO.BTN_DEMO' | translate }}
+      </a>
+      <a routerLink="/signup" class="inline-flex items-center justify-center h-11 px-8 rounded-md border border-border bg-transparent text-foreground font-medium text-sm hover:bg-accent hover:text-accent-foreground transition-colors">
+        {{ 'HERO.BTN_LEARN' | translate }}
+      </a>
     </div>
   </div>
 

@@ -19,30 +19,30 @@
     <div class="flex items-center gap-1 mb-6 border-b border-border">
       <button
         class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px"
-        [class.border-foreground]="activeTab === 'my'"
-        [class.text-foreground]="activeTab === 'my'"
-        [class.border-transparent]="activeTab !== 'my'"
-        [class.text-muted-foreground]="activeTab !== 'my'"
+        [class.border-foreground]="activeTab() === 'my'"
+        [class.text-foreground]="activeTab() === 'my'"
+        [class.border-transparent]="activeTab() !== 'my'"
+        [class.text-muted-foreground]="activeTab() !== 'my'"
         (click)="switchTab('my')"
       >
         My Templates
       </button>
       <button
         class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px"
-        [class.border-foreground]="activeTab === 'public'"
-        [class.text-foreground]="activeTab === 'public'"
-        [class.border-transparent]="activeTab !== 'public'"
-        [class.text-muted-foreground]="activeTab !== 'public'"
+        [class.border-foreground]="activeTab() === 'public'"
+        [class.text-foreground]="activeTab() === 'public'"
+        [class.border-transparent]="activeTab() !== 'public'"
+        [class.text-muted-foreground]="activeTab() !== 'public'"
         (click)="switchTab('public')"
       >
         Public Templates
       </button>
       <button
         class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px"
-        [class.border-foreground]="activeTab === 'search'"
-        [class.text-foreground]="activeTab === 'search'"
-        [class.border-transparent]="activeTab !== 'search'"
-        [class.text-muted-foreground]="activeTab !== 'search'"
+        [class.border-foreground]="activeTab() === 'search'"
+        [class.text-foreground]="activeTab() === 'search'"
+        [class.border-transparent]="activeTab() !== 'search'"
+        [class.text-muted-foreground]="activeTab() !== 'search'"
         (click)="switchTab('search')"
       >
         Search
@@ -50,11 +50,11 @@
     </div>
 
     <!-- Search bar -->
-    @if (activeTab === 'search') {
+    @if (activeTab() === 'search') {
       <div class="flex gap-3 mb-6">
         <input
           type="text"
-          [(ngModel)]="searchQuery"
+          [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
           (keyup.enter)="onSearch()"
           placeholder="Search templates..."
           class="flex-1 h-10 rounded-md border border-border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -84,7 +84,7 @@
 
     <!-- Template grid -->
     @if (!templateSvc.isLoading()) {
-      @if (activeTab === 'search' && !hasSearched) {
+      @if (activeTab() === 'search' && !hasSearched()) {
         <div class="text-center py-20 text-muted-foreground text-sm">
           Enter a search term to find templates
         </div>
@@ -119,7 +119,7 @@
               </div>
 
               <!-- Actions (owner only) -->
-              @if (activeTab === 'my' && tpl.ownerId === auth.currentUser()?.id) {
+              @if (activeTab() === 'my' && tpl.ownerId === auth.currentUser()?.id) {
                 <div class="flex gap-2 mt-3 pt-3 border-t border-border">
                   <button
                     (click)="cloneTemplate(tpl.id)"

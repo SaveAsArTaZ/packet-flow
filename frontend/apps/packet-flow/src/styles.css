@@ -150,3 +150,10 @@ pf-root {
     display: none;                  /* Chrome/Safari/Edge */
   }
 }
+
+/* Center Tabler icons */
+tabler-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

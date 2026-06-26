@@ -4,53 +4,64 @@
       <div class="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center mx-auto mb-4">
         <span class="text-background text-lg font-extrabold">P</span>
       </div>
-      <h2 class="text-2xl font-bold tracking-tight">{{ 'AUTH.LOGIN_TITLE' | translate }}</h2>
-      <p class="text-sm text-muted-foreground mt-2">{{ 'AUTH.LOGIN_SUBTITLE' | translate }}</p>
+      <h2 class="text-2xl font-bold tracking-tight">
+        <pf-typewriter [text]="'AUTH.LOGIN_TITLE' | translate" [speed]="30" [cursor]="true" [persistentCursor]="false" [scrollTrigger]="false" />
+      </h2>
+      <p class="text-sm text-muted-foreground mt-2">
+        <pf-typewriter [text]="'AUTH.LOGIN_SUBTITLE' | translate" [speed]="25" [cursor]="true" [persistentCursor]="false" [scrollTrigger]="false" [delay]="600" (finished)="onSubtitleDone()" />
+      </p>
     </div>
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-      <!-- Server error -->
-      @if (serverError) {
-        <div class="rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-          {{ serverError }}
-        </div>
+    <form #formEl [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+      @if (serverError()) {
+        <div class="form-field rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400" [class.opacity-0]="!subtitleDone()">{{ serverError() }}</div>
       }
 
-      <div class="space-y-2">
+      <div class="form-field space-y-2" [class.opacity-0]="!subtitleDone()">
         <label class="text-sm font-medium" for="login-email">{{ 'AUTH.EMAIL' | translate }}</label>
-        <input
-          id="login-email" type="text" formControlName="usernameOrEmail"
-          class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          [placeholder]="'AUTH.EMAIL' | translate" autocomplete="username"
-        />
+        <input id="login-email" type="text" formControlName="usernameOrEmail"
+          class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+          [placeholder]="'AUTH.EMAIL' | translate" autocomplete="username" />
         @if (form.controls.usernameOrEmail.touched && form.controls.usernameOrEmail.errors?.['required']) {
           <p class="text-xs text-red-500">{{ 'ERRORS.REQUIRED' | translate }}</p>
         }
       </div>
-      <div class="space-y-2">
+
+      <div class="form-field space-y-2" [class.opacity-0]="!subtitleDone()">
         <label class="text-sm font-medium" for="login-password">{{ 'AUTH.PASSWORD' | translate }}</label>
-        <input
-          id="login-password" type="password" formControlName="password"
-          class="w-full h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          [placeholder]="'AUTH.PASSWORD' | translate" autocomplete="current-password"
-        />
+        <div class="relative">
+          <input id="login-password" [type]="showPassword() ? 'text' : 'password'" formControlName="password"
+            class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 pr-10 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+            [placeholder]="'AUTH.PASSWORD' | translate" autocomplete="current-password" />
+          <button type="button"
+            class="absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            (click)="showPassword.set(!showPassword())" tabindex="-1">
+            @if (showPassword()) {
+              <tabler-icon icon="eye-off" class="!h-4 !w-4" />
+            } @else {
+              <tabler-icon icon="eye" class="!h-4 !w-4" />
+            }
+          </button>
+        </div>
         @if (form.controls.password.touched && form.controls.password.errors?.['required']) {
           <p class="text-xs text-red-500">{{ 'ERRORS.REQUIRED' | translate }}</p>
         }
       </div>
-      <label class="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-        <input type="checkbox" formControlName="rememberMe" class="rounded border-border" />
-        Remember me
+
+      <label class="form-field flex items-center gap-2 text-sm text-muted-foreground cursor-pointer" [class.opacity-0]="!subtitleDone()">
+        <input type="checkbox" formControlName="rememberMe"
+          class="h-4 w-4 shrink-0 rounded-sm border border-border bg-background accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
+        {{ 'AUTH.REMEMBER_ME' | translate }}
       </label>
-      <button
-        type="submit" [disabled]="auth.isLoading()"
-        class="w-full h-10 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
-      >
+
+      <button type="submit" [disabled]="auth.isLoading()"
+        class="form-btn w-full h-10 rounded-md bg-foreground text-background border border-foreground font-medium text-sm hover:bg-foreground/90 transition-colors disabled:opacity-50 inline-flex items-center justify-center"
+        [class.opacity-0]="!subtitleDone()">
         @if (auth.isLoading()) { {{ 'AUTH.LOGGING_IN' | translate }} } @else { {{ 'AUTH.LOGIN_BTN' | translate }} }
       </button>
     </form>
 
-    <p class="text-center text-sm text-muted-foreground">
+    <p class="form-footer text-center text-sm text-muted-foreground" [class.opacity-0]="!subtitleDone()">
       {{ 'AUTH.NO_ACCOUNT' | translate }}
       <a routerLink="/signup" class="font-medium text-foreground underline underline-offset-4 hover:opacity-80">{{ 'AUTH.SIGNUP_LINK' | translate }}</a>
     </p>
