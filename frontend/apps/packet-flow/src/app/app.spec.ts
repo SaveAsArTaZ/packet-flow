@@ -12,7 +12,7 @@ describe('App', () => {
       providers: [
         provideRouter([]),
         provideHttpClient(),
-        provideTranslateService({ lang: 'en' }),
+        provideTranslateService(),
       ],
     }).compileComponents();
   });

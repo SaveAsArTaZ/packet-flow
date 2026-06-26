@@ -5,11 +5,30 @@ export type SupportedLang = 'en' | 'fr' | 'fa';
 
 const LANG_KEY = 'packet-flow-lang';
 
+/** Resolve the initial language at module load so the signal
+ *  has the correct value before any component renders. */
+function resolveInitialLang(): SupportedLang {
+  const valid: SupportedLang[] = ['en', 'fr', 'fa'];
+  try {
+    const saved = localStorage.getItem(LANG_KEY) as SupportedLang | null;
+    if (saved && valid.includes(saved)) return saved;
+  } catch { /* localStorage unavailable */ }
+
+  try {
+    const browser = navigator.language?.split('-')[0] as SupportedLang;
+    if (valid.includes(browser)) return browser;
+  } catch { /* navigator unavailable */ }
+
+  return 'en';
+}
+
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
   private translate = inject(TranslateService);
 
-  readonly currentLang = signal<SupportedLang>('en');
+  /** Signal initialized at module load — has the right value instantly */
+  readonly currentLang = signal<SupportedLang>(resolveInitialLang());
+
   readonly available = [
     { code: 'en' as const, label: 'English', dir: 'ltr' as const },
     { code: 'fr' as const, label: 'Français', dir: 'ltr' as const },
@@ -17,16 +36,8 @@ export class LanguageService {
   ];
 
   constructor() {
-    const saved = localStorage.getItem(LANG_KEY) as SupportedLang | null;
-    const browserLang = navigator.language?.split('-')[0] as SupportedLang;
-    const validLangs: SupportedLang[] = ['en', 'fr', 'fa'];
-    const lang = saved && validLangs.includes(saved) ? saved
-      : validLangs.includes(browserLang) ? browserLang
-      : 'en';
-
-    this.translate.use(lang);
-    this.currentLang.set(lang);
-    this.applyDir(lang);
+    // Translations are preloaded by APP_INITIALIZER — just apply dir.
+    this.applyDir(this.currentLang());
   }
 
   switchLang(lang: SupportedLang): void {

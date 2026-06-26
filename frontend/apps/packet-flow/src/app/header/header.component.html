@@ -14,11 +14,10 @@
       <div class="relative" [attr.dir]="lang.currentDir">
         <select
           class="appearance-none h-8 px-2 text-xs font-medium rounded-md border border-border bg-background text-foreground cursor-pointer hover:bg-muted transition-colors"
-          [value]="lang.currentLang()"
           (change)="switchLang($any($event.target).value)"
         >
           @for (l of lang.available; track l.code) {
-            <option [value]="l.code">{{ l.label }}</option>
+            <option [value]="l.code" [selected]="l.code === lang.currentLang()">{{ l.label }}</option>
           }
         </select>
       </div>
